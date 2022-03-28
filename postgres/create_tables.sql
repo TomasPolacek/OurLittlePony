@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS bets (
   odds_1x float,
   odds_2x float,
   odds_12 float,
-  ts date
+  ts date,
+  sha varchar(70) UNIQUE 
 );  
 
-GRANT ALL ON bets TO boo;
+GRANT ALL ON bets TO baa;
