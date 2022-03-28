@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS bets (
   odds_1x float,
   odds_2x float,
   odds_12 float,
-  ts date,
+  ts timestamp,
   sha varchar(70) UNIQUE 
 );  
 
