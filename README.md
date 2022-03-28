@@ -1,4 +1,5 @@
 # OurLittlePony
+```
 bet_id |      web_site       | sport_type | sport_league  |        team1        |      team2      | odds_1 | odds_2 | odds_x | odds_1x | odds_2x | odds_12 |         ts          |                               sha
 --------+---------------------+------------+---------------+---------------------+-----------------+--------+--------+--------+---------+---------+---------+---------------------+------------------------------------------------------------------
       1 | https://www.nike.sk | futbal     | liga-majstrov | Benfica Lisabon     | FC Liverpool    |   8.53 |   1.38 |   4.84 |    3.07 |    1.07 |    1.19 | 2022-04-05 21:00:00 | 31a504603d112c43a17d84da8896f2a924d63c655ca69c640d4ba2ad98527bc5 
@@ -9,3 +10,5 @@ bet_id |      web_site       | sport_type | sport_league  |        team1        
       6 | https://www.nike.sk | futbal     | europska-liga | Eintracht Frankfurt | FC Barcelona    |   4.17 |   1.77 |    3.9 |    2.02 |    1.22 |    1.24 | 2022-04-07 21:00:00 | cd257d7bf2a25ca09580f2074e1659c7dc0f2aaf078455cea51371ee34fc1663 
       7 | https://www.nike.sk | futbal     | europska-liga | Sp. Braga           | Gl. Rangers     |   2.51 |   2.77 |   3.33 |    1.43 |    1.51 |    1.32 | 2022-04-07 21:00:00 | dff5eedfeba6807c8c99fe2f2f1260f409becfdcb1dec37008bce18c7e1ed912 
       8 | https://www.nike.sk | futbal     | europska-liga | West Ham            | Ol. Lyon        |   1.94 |   3.85 |    3.5 |    1.25 |    1.84 |    1.29 | 2022-04-07 21:00:00 | eab84abf9901de055a62d8d6e2420114bfd87317742d49ac3e81b85a7bb584a2
+```
+ 
