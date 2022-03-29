@@ -11,4 +11,8 @@ bet_id |      web_site       | sport_type | sport_league  |        team1        
       7 | https://www.nike.sk | futbal     | europska-liga | Sp. Braga           | Gl. Rangers     |   2.51 |   2.77 |   3.33 |    1.43 |    1.51 |    1.32 | 2022-04-07 21:00:00 | dff5eedfeba6807c8c99fe2f2f1260f409becfdcb1dec37008bce18c7e1ed912 
       8 | https://www.nike.sk | futbal     | europska-liga | West Ham            | Ol. Lyon        |   1.94 |   3.85 |    3.5 |    1.25 |    1.84 |    1.29 | 2022-04-07 21:00:00 | eab84abf9901de055a62d8d6e2420114bfd87317742d49ac3e81b85a7bb584a2
 ```
- 
+pip install selenium
+pip install pyodbc
+pip install webdriver-manager
+pip install bs4
+https://www.postgresql.org/ftp/odbc/versions/msi/

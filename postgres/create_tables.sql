@@ -1,6 +1,5 @@
 -- Creation of bets table
 CREATE TABLE IF NOT EXISTS bets (
-  bet_id serial PRIMARY KEY,
   web_site varchar(250),
   sport_type varchar(250),
   sport_league varchar(250),
@@ -13,7 +12,7 @@ CREATE TABLE IF NOT EXISTS bets (
   odds_2x float,
   odds_12 float,
   ts timestamp,
-  sha varchar(70) UNIQUE 
+  PRIMARY KEY(web_site, sport_type, sport_league, team1, team2, ts) 
 );  
 
 GRANT ALL ON bets TO baa;
