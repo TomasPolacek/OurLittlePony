@@ -6,10 +6,9 @@ from random import randint
 from time import sleep
 from bs4 import BeautifulSoup
 from datetime import datetime
-from hashlib import sha256
 import re
-import pyodbc
 import config as c
+from db_handler import DB_Handler
 
 web_url = "https://www.nike.sk"
 
@@ -22,22 +21,11 @@ browser_service=Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=browser_service, options=browser_options)
 driver.get(web_url)
 
-# Specifying the ODBC driver, server name, database, etc. directly
-conn_str = (
-    "DRIVER={PostgreSQL Unicode(x64)};"
-    "SERVER="+ c.postgres_host+";"
-    "PORT="+ c.postgres_port +";"
-    "UID="+ c.postgres_user + ";"
-    "PWD="+ c.postgres_pass + ";"
-    "DATABASE="+ c.postgres_db +";"
-    )
-cnxn = pyodbc.connect(conn_str, autocommit=True)
+# DB handler, connect to postgres DB
+psql = DB_Handler()
 
-# Create a cursor from the connection
-cursor = cnxn.cursor()
-
-# Table headers
-all_cols_names_str = ", ".join(c.tab_col)
+# Delete old records
+psql.delete_older()
 
 sleep(randint(5,12))
 
@@ -82,31 +70,31 @@ for idx_sport, sport in enumerate(sports):
             possible_num = row_bs.find_all("span", class_="bet-center")
             if len(possible_num) == 6:
                 # 1, 0, 2, 10, 12, 20
-                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else 0
-                res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else 0
-                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else 0
-                res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else 0
-                res[c.tab_col[10]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else 0
-                res[c.tab_col[9]] = possible_num[5].getText().strip() if possible_num[5].getText().strip() != "" else 0
+                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
+                res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "0"
+                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "0"
+                res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "0"
+                res[c.tab_col[10]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "0"
+                res[c.tab_col[9]] = possible_num[5].getText().strip() if possible_num[5].getText().strip() != "" else "0"
 
             elif len(possible_num) == 5:
                 # 1, 0, 2, 10, 20
-                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else 0
-                res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else 0
-                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else 0
-                res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else 0
-                res[c.tab_col[10]] = 0
-                res[c.tab_col[9]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else 0
+                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
+                res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "0"
+                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "0"
+                res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "0"
+                res[c.tab_col[10]] = "0"
+                res[c.tab_col[9]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "0"
                 
 
             elif len(possible_num) == 2:
                 # 1, 2
-                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else 0
-                res[c.tab_col[7]] = 0
-                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else 0
-                res[c.tab_col[8]] = 0
-                res[c.tab_col[10]] = 0
-                res[c.tab_col[9]] = 0
+                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
+                res[c.tab_col[7]] = "0"
+                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "0"
+                res[c.tab_col[8]] = "0"
+                res[c.tab_col[10]] = "0"
+                res[c.tab_col[9]] = "0"
 
             else:
                 break
@@ -127,29 +115,10 @@ for idx_sport, sport in enumerate(sports):
 
             res[c.tab_col[0]] = "'" + web_url + "'"
 
-            # hash string: 'sport, league, date, team1, team2'
-            sha_string = str(res[c.tab_col[1]] + "," + res[c.tab_col[2]] + "," + res[c.tab_col[11]] + "," + res[c.tab_col[3]] + "," + res[c.tab_col[4]]).encode('utf-8')
-            res[c.tab_col[12]] = "'" + str(sha256(sha_string).hexdigest()) + "'"
-
             all_cols_vals_str = "("
             for col in c.tab_col:
                 all_cols_vals_str += res[col] + ", " if col != c.tab_col[-1] else res[col] + ") "
 
-            print(all_cols_vals_str)
+            psql.upsert(res)
 
-            upd_ins_str = (
-                        "INSERT INTO bets (" + all_cols_names_str + ")" 
-                        " VALUES " + all_cols_vals_str + ""
-                        "ON CONFLICT (" + c.tab_col[12] + ") DO UPDATE " 
-                        "SET " + c.tab_col[5] + " = " + res[c.tab_col[5]] + ", "
-                            + c.tab_col[6] + " = " + res[c.tab_col[6]] + ", "
-                            + c.tab_col[7] + " = " + res[c.tab_col[7]] + ", "
-                            + c.tab_col[8] + " = " + res[c.tab_col[8]] + ", "
-                            + c.tab_col[9] + " = " + res[c.tab_col[9]] + ", "
-                            + c.tab_col[10] + " = " + res[c.tab_col[10]] + ";"
-                    )
-            print(upd_ins_str)
-            cursor.execute(upd_ins_str)
-            
-
-cnxn.close()
+psql.close()
