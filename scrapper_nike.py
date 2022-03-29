@@ -115,10 +115,6 @@ for idx_sport, sport in enumerate(sports):
 
             res[c.tab_col[0]] = "'" + web_url + "'"
 
-            all_cols_vals_str = "("
-            for col in c.tab_col:
-                all_cols_vals_str += res[col] + ", " if col != c.tab_col[-1] else res[col] + ") "
-
             psql.upsert(res)
 
 psql.close()
