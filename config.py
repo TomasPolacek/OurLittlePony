@@ -6,6 +6,7 @@ postgres_port = "5432"
 postgres_user = "baa"
 postgres_pass = "password"
 postgres_db = "baa"
+postgres_tab_name = "bets"
 
 ############### Table columns ###############
 tab_col = [
@@ -20,6 +21,5 @@ tab_col = [
         "odds_1x",
         "odds_2x",
         "odds_12",
-        "ts",
-        "sha"]
+        "ts"]
 

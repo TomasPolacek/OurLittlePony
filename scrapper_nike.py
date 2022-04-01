@@ -1,3 +1,4 @@
+from operator import truediv
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -6,150 +7,157 @@ from random import randint
 from time import sleep
 from bs4 import BeautifulSoup
 from datetime import datetime
-from hashlib import sha256
 import re
-import pyodbc
 import config as c
+from db_handler import DB_Handler
 
-web_url = "https://www.nike.sk"
+def scrape(opt:int = 0):
+    '''
+    Scrape https://www.nike.sk for odds for each event
 
-# Install Chrome driver
-browser_options = webdriver.ChromeOptions()
-browser_options.add_argument("--start-maximized")
-browser_service=Service(ChromeDriverManager().install())
+    Arguments:
 
-# Open browser
-driver = webdriver.Chrome(service=browser_service, options=browser_options)
-driver.get(web_url)
+    opt : 0 = Start scraping from the beginning
+          1 = Continue scraping from lastexecution
+    '''
+    # Get last scrapped link
+    try:
+        f = open("last_link.txt", "r", encoding = 'utf-8')       
+        start_link_str = f.readline()
+        f.close()
+    except IOError:
+        start_link_str = ""
 
-# Specifying the ODBC driver, server name, database, etc. directly
-conn_str = (
-    "DRIVER={PostgreSQL Unicode(x64)};"
-    "SERVER="+ c.postgres_host+";"
-    "PORT="+ c.postgres_port +";"
-    "UID="+ c.postgres_user + ";"
-    "PWD="+ c.postgres_pass + ";"
-    "DATABASE="+ c.postgres_db +";"
-    )
-cnxn = pyodbc.connect(conn_str, autocommit=True)
+    if opt == 0: 
+        start_link_str = ""
+        start_scrape = True
+    elif opt == 1: 
+        start_scrape = False
 
-# Create a cursor from the connection
-cursor = cnxn.cursor()
+    if not start_scrape and start_link_str != "":
+        prev_sport = start_link_str.split('/')[2]
+        prev_league = start_link_str.split('/')[-1]
+    else:
+        start_scrape = True
 
-# Table headers
-all_cols_names_str = ", ".join(c.tab_col)
+    web_url = "https://www.nike.sk"
 
-sleep(randint(5,12))
+    # Install Chrome driver
+    browser_options = webdriver.ChromeOptions()
+    browser_options.add_argument("--start-maximized")
+    browser_service=Service(ChromeDriverManager().install())
 
-# Extract element of each sport 
-sports_bar = driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div').get_attribute('innerHTML')
-sports_soup = BeautifulSoup(sports_bar, 'html.parser')
-sports = [s for s in sports_soup.find_all('div', class_="menu-item menu-item-0")]
+    # Open browser
+    driver = webdriver.Chrome(service=browser_service, options=browser_options)
+    driver.get(web_url)
 
-for idx_sport, sport in enumerate(sports):
+    # DB handler, connect to postgres DB
+    psql = DB_Handler()
 
-    # Uncollapse sport to show leagues
-    bs_sport = BeautifulSoup(str(sport), 'html.parser')
-    link = bs_sport.find('a', href=True)['href']
+    # Delete old records
+    psql.delete_older()
+
     sleep(randint(5,12))
-    click = driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div/div[' + str(idx_sport + 1) + ']/div[1]/a[1]').click()
-    sleep(randint(1,2))
 
-    # Extract element of each league
-    leagues_bar =driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div/div[' + str(idx_sport + 1) + ']/div[2]').get_attribute('innerHTML') 
-    league_soup = BeautifulSoup(leagues_bar, 'html.parser')
-    leagues = [le for le in league_soup.find_all('div', class_="menu-item menu-item-1")]
+    # Extract element of each sport 
+    sports_bar = driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div').get_attribute('innerHTML')
+    sports_soup = BeautifulSoup(sports_bar, 'html.parser')
+    sports = [s for s in sports_soup.find_all('div', class_="menu-item menu-item-0")]
+    
+    for idx_sport, sport in enumerate(sports):
+        
+        # Extract sport name
+        bs_sport = BeautifulSoup(str(sport), 'html.parser')
+        sport_str = str(bs_sport.find('a', href=True)['href']).split('/')[2]
 
-    for league in leagues:
+        # Uncollapse sport to show leagues
+        if (not start_scrape and sport_str == prev_sport) or start_scrape:   
+            sleep(randint(3,6))
+            driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div/div[' + str(idx_sport + 1) + ']/div[1]/a[1]').click()
+            sleep(randint(1,2))
 
-        # Parse link from league element
-        bs_league = BeautifulSoup(str(league), 'html.parser')
-        link_league = bs_league.find('a', href=True)['href']
+            # Extract element of each league
+            leagues_bar =driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div/div[' + str(idx_sport + 1) + ']/div[2]').get_attribute('innerHTML') 
+            league_soup = BeautifulSoup(leagues_bar, 'html.parser')
+            leagues = [le for le in league_soup.find_all('div', class_="menu-item menu-item-1")]
 
-        # Go to new page
-        sleep(randint(5,12))    
-        driver.get(web_url + link_league)
-        content_html = driver.page_source
+            for league in leagues:
 
-        content_soup = BeautifulSoup(content_html, 'html.parser')
-        rows = content_soup.find_all("div", class_="flex bet-view-prematch-row")
+                # Parse link from league element
+                bs_league = BeautifulSoup(str(league), 'html.parser')
+                link_league = bs_league.find('a', href=True)['href']
 
-        for row in rows:
-            res = {}
-            row_bs = BeautifulSoup(str(row).replace("\n", ""), 'html.parser')
+                if not start_scrape and prev_league == link_league.split('/')[-1]:
+                    start_scrape = True
 
-            # Numbers
-            possible_num = row_bs.find_all("span", class_="bet-center")
-            if len(possible_num) == 6:
-                # 1, 0, 2, 10, 12, 20
-                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else 0
-                res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else 0
-                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else 0
-                res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else 0
-                res[c.tab_col[10]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else 0
-                res[c.tab_col[9]] = possible_num[5].getText().strip() if possible_num[5].getText().strip() != "" else 0
+                if start_scrape:
 
-            elif len(possible_num) == 5:
-                # 1, 0, 2, 10, 20
-                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else 0
-                res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else 0
-                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else 0
-                res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else 0
-                res[c.tab_col[10]] = 0
-                res[c.tab_col[9]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else 0
-                
+                    # Go to new page
+                    sleep(randint(5,12))    
+                    driver.get(web_url + link_league)
+                    content_html = driver.page_source
 
-            elif len(possible_num) == 2:
-                # 1, 2
-                res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else 0
-                res[c.tab_col[7]] = 0
-                res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else 0
-                res[c.tab_col[8]] = 0
-                res[c.tab_col[10]] = 0
-                res[c.tab_col[9]] = 0
+                    content_soup = BeautifulSoup(content_html, 'html.parser')
+                    rows = content_soup.find_all("div", class_="flex bet-view-prematch-row")
 
-            else:
-                break
+                    # save last visited link
+                    f = open("last_link.txt","w", encoding = 'utf-8')
+                    f.write(link_league)
+                    f.close()
 
-            # Oponents
-            oponents = row_bs.find("button", class_="bets-opponents ellipsis flex items-center").find_all("div")
-            res[c.tab_col[3]] = "'" + oponents[0].getText().strip() + "'"
-            res[c.tab_col[4]] = "'" + oponents[2].getText().strip() + "'"
+                    for row in rows:
+                        res = {}
+                        row_bs = BeautifulSoup(str(row).replace("\n", ""), 'html.parser')
 
-            # Time & date
-            time_in_row =str(re.findall("\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}", str(row_bs))[0]) 
-            res[c.tab_col[11]] = "'" + str(datetime.strptime(time_in_row, '%d.%m.%Y %H:%M')) + "'"
+                        # Numbers
+                        possible_num = row_bs.find_all("span", class_="bet-center")
+                        if len(possible_num) == 6:
+                            # 1, 0, 2, 10, 12, 20
+                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
+                            res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "0"
+                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "0"
+                            res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "0"
+                            res[c.tab_col[10]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "0"
+                            res[c.tab_col[9]] = possible_num[5].getText().strip() if possible_num[5].getText().strip() != "" else "0"
 
-            # Sport category and league (/tipovanie/futbal/anglicko/anglicko-i-liga)
-            parsed_link = link_league.split('/')
-            res[c.tab_col[1]] = "'" + parsed_link[2] + "'"
-            res[c.tab_col[2]] = "'" + parsed_link[-1] + "'"
+                        elif len(possible_num) == 5:
+                            # 1, 0, 2, 10, 20
+                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
+                            res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "0"
+                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "0"
+                            res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "0"
+                            res[c.tab_col[10]] = "0"
+                            res[c.tab_col[9]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "0"
+                            
 
-            res[c.tab_col[0]] = "'" + web_url + "'"
+                        elif len(possible_num) == 2:
+                            # 1, 2
+                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
+                            res[c.tab_col[7]] = "0"
+                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "0"
+                            res[c.tab_col[8]] = "0"
+                            res[c.tab_col[10]] = "0"
+                            res[c.tab_col[9]] = "0"
 
-            # hash string: 'sport, league, date, team1, team2'
-            sha_string = str(res[c.tab_col[1]] + "," + res[c.tab_col[2]] + "," + res[c.tab_col[11]] + "," + res[c.tab_col[3]] + "," + res[c.tab_col[4]]).encode('utf-8')
-            res[c.tab_col[12]] = "'" + str(sha256(sha_string).hexdigest()) + "'"
+                        else:
+                            break
 
-            all_cols_vals_str = "("
-            for col in c.tab_col:
-                all_cols_vals_str += res[col] + ", " if col != c.tab_col[-1] else res[col] + ") "
+                        # Oponents
+                        oponents = row_bs.find("button", class_="bets-opponents ellipsis flex items-center").find_all("div")
+                        res[c.tab_col[3]] = "'" + oponents[0].getText().strip() + "'"
+                        res[c.tab_col[4]] = "'" + oponents[2].getText().strip() + "'"
 
-            print(all_cols_vals_str)
+                        # Time & date
+                        time_in_row =str(re.findall("\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}", str(row_bs))[0]) 
+                        res[c.tab_col[11]] = "'" + str(datetime.strptime(time_in_row, '%d.%m.%Y %H:%M')) + "'"
 
-            upd_ins_str = (
-                        "INSERT INTO bets (" + all_cols_names_str + ")" 
-                        " VALUES " + all_cols_vals_str + ""
-                        "ON CONFLICT (" + c.tab_col[12] + ") DO UPDATE " 
-                        "SET " + c.tab_col[5] + " = " + res[c.tab_col[5]] + ", "
-                            + c.tab_col[6] + " = " + res[c.tab_col[6]] + ", "
-                            + c.tab_col[7] + " = " + res[c.tab_col[7]] + ", "
-                            + c.tab_col[8] + " = " + res[c.tab_col[8]] + ", "
-                            + c.tab_col[9] + " = " + res[c.tab_col[9]] + ", "
-                            + c.tab_col[10] + " = " + res[c.tab_col[10]] + ";"
-                    )
-            print(upd_ins_str)
-            cursor.execute(upd_ins_str)
-            
+                        # Sport category and league (/tipovanie/futbal/anglicko/anglicko-i-liga)
+                        parsed_link = link_league.split('/')
+                        res[c.tab_col[1]] = "'" + parsed_link[2] + "'"
+                        res[c.tab_col[2]] = "'" + parsed_link[-1] + "'"
 
-cnxn.close()
+                        res[c.tab_col[0]] = "'" + web_url + "'"
+
+                        psql.upsert(res)
+
+    psql.close()
