@@ -1,0 +1,5 @@
+__pycache__
+postgres/postgres-data
+test.py
+last_link.txt
+log.txt
