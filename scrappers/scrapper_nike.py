@@ -10,7 +10,7 @@ import re
 import config as c
 from db_handler import DB_Handler
 
-def scrape(opt:int = 0, only_sport:str = "", only_league:str = ""):
+def scrape(opt:int = 0):
     '''
     Scrape https://www.nike.sk for odds for each event
 
@@ -73,10 +73,7 @@ def scrape(opt:int = 0, only_sport:str = "", only_league:str = ""):
         sport_str = str(bs_sport.find('a', href=True)['href']).split('/')[2]
         print("Sport category: " + sport_str)
 
-        if sport_str != only_sport and only_sport != "":
-            continue
-        
-        print("Getting league sub links..."),
+        print("Getting league sub links...")
         # Uncollapse sport to show leagues
         if (not start_scrape and sport_str == prev_sport) or start_scrape:   
             sleep(randint(3,6))
@@ -132,9 +129,6 @@ def scrape(opt:int = 0, only_sport:str = "", only_league:str = ""):
 
                 league_str = league.split('/')[-1]
                 print(league)
-
-                if league_str != only_league and only_league != "":
-                    continue
 
                 if not start_scrape and prev_league == league_str:
                     start_scrape = True
