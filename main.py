@@ -1,4 +1,4 @@
-import scrapper_nike as scr_nike
+import scrappers.scrapper_nike as scr_nike
 import sys
 import datetime;
   
