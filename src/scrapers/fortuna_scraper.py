@@ -9,9 +9,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
-import config
-from scrapers import *
-
 if __name__ == "__main__":
 
     web_link = "https://www.ifortuna.sk"
@@ -24,7 +21,7 @@ if __name__ == "__main__":
     links = [l['href'] for l in soup.find_all('a', href=True)]
     random.shuffle(links)
     for l in links:
-        if l.count('/') > 2 and 'm-atp-chall-sanremo-dvojhra' in l:
+        if l.count('/') > 2:
             time.sleep(random.randint(5, 12))
             driver.get(web_link + l)
             time.sleep(2)
@@ -42,8 +39,8 @@ if __name__ == "__main__":
             for row in rows[1:]:
                 if 'STAV SI LIVE' in str(row):
                     continue
+                record = {}
                 try:
-                    record = {}
                     bets = row.find_all('td')
                     for i,h in enumerate(headers):
                         to_ins = None
@@ -53,12 +50,12 @@ if __name__ == "__main__":
                             ts = int(bets[i]['data-value']) / 1000
                             to_ins = datetime.fromtimestamp(ts)
                         else:
-                            to_ins = bets[i].getText().strip()
-
+                            to_ins = bets[i].getText().strip()                   
                         record[headers[i]] = to_ins
                 except Exception as e:
                     pass
                 if len(record) != 0:
+                    record['sport'] = l.split('/')[2]
                     records.append(record)
             print(records)
 
