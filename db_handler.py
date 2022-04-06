@@ -1,5 +1,6 @@
 import config as c
 import pyodbc
+from datetime import date
 
 class DB_Handler:
 
@@ -24,6 +25,15 @@ class DB_Handler:
         # Composite primary key
         self.pk_str = c.tab_col[0] + ", " + c.tab_col[1] + ", " + c.tab_col[2] + ", " + c.tab_col[3] + ", " + c.tab_col[4]+ ", " + c.tab_col[11]
 
+    def get_from_date(self, web_site:str = "", date_to_querry:str = "", table: str = c.postgres_tab_name, ts_col: str = c.tab_col[11], web_site_col:str = c.tab_col[0]) -> list:
+        
+        if date_to_querry == "":
+            date_to_querry = date.today().strftime('%Y/%m/%d')
+
+        if web_site == "":
+            return self.cursor.execute("SELECT * FROM " + table + " WHERE TO_DATE('"+ date_to_querry +"','YYYY-MM-DD')=" + ts_col + "::date;").fetchall()
+        else:
+            return self.cursor.execute("SELECT * FROM " + table + " WHERE TO_DATE('"+ date_to_querry +"','YYYY-MM-DD')=" + ts_col + "::date and " + web_site_col + "='" + web_site +"';").fetchall()
 
     def delete_older(self, ts: str = "current_timestamp(0)", table: str = c.postgres_tab_name, ts_col: str = c.tab_col[11]) -> int:
         """
