@@ -1,4 +1,3 @@
-
 ################### DB vars ##################
 
 postgres_host = "localhost"

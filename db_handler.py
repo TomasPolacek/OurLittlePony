@@ -1,6 +1,9 @@
-import config as c
-import pyodbc
 from datetime import date
+
+import pyodbc
+
+import config as c
+
 
 class DB_Handler:
 
@@ -52,6 +55,7 @@ class DB_Handler:
         return 0
 
     def upsert(self, vals: list[dict], table: str = c.postgres_tab_name, headers: list[str] = None) -> int:
+
         """
         Insert values into a table. If record exists, update odds columns instead.
         Returns number of affected rows.
