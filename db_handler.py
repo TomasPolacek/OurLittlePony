@@ -51,7 +51,7 @@ class DB_Handler:
         print("Deleted " + str(num_of_rows) + " old records")
         return 0
 
-    def upsert(self, vals: dict, table: str = c.postgres_tab_name, headers: list[str] = None) -> int:
+    def upsert(self, vals: list[dict], table: str = c.postgres_tab_name, headers: list[str] = None) -> int:
         """
         Insert values into a table. If record exists, update odds columns instead.
         Returns number of affected rows.
@@ -67,28 +67,35 @@ class DB_Handler:
             headers = c.tab_col
             headers_str = self.all_headers
 
-        if len(headers) != len(vals): 
-            raise Exception("Error: Assignment - headers(" + str(len(headers)) + ") != vals(" + str(len(vals)) + ")")
+        all_vals = ""
+        for row in vals:
 
-        all_cols_vals_str = "("
-        for col in headers:
-            all_cols_vals_str += vals[col] + ", " if col != headers[-1] else vals[col] + ") "
+            all_cols_vals_str = "("
+
+            for col in headers:
+                if col not in row:
+                    row[col] = '1'
+                all_cols_vals_str += row[col] + ", " if col != headers[-1] else row[col] + ")"
+                
+            all_cols_vals_str += ", " if row != vals[-1] else " "
+
+            all_vals += all_cols_vals_str
         
         upd_ins_str = (
                             "INSERT INTO " + table + " (" + headers_str + ")" 
-                            " VALUES " + all_cols_vals_str + ""
+                            " VALUES " + all_vals + ""
                             "ON CONFLICT (" + self.pk_str + ") DO UPDATE " 
-                            "SET " + c.tab_col[5] + " = " + vals[c.tab_col[5]] + ", "
-                                + c.tab_col[6] + " = " + vals[c.tab_col[6]] + ", "
-                                + c.tab_col[7] + " = " + vals[c.tab_col[7]] + ", "
-                                + c.tab_col[8] + " = " + vals[c.tab_col[8]] + ", "
-                                + c.tab_col[9] + " = " + vals[c.tab_col[9]] + ", "
-                                + c.tab_col[10] + " = " + vals[c.tab_col[10]] + ";"
+                            "SET " + c.tab_col[5] + " = excluded." + c.tab_col[5] + ", "
+                                + c.tab_col[6] + " = excluded." + c.tab_col[6] + ", "
+                                + c.tab_col[7] + " = excluded." + c.tab_col[7] + ", "
+                                + c.tab_col[8] + " = excluded." + c.tab_col[8] + ", "
+                                + c.tab_col[9] + " = excluded." + c.tab_col[9] + ", "
+                                + c.tab_col[10] + " = excluded." + c.tab_col[10] + ";"
                         )
-        
+
         num_of_rows = self.cursor.execute(upd_ins_str).rowcount
         print("Inserted/Updated " + str(num_of_rows) + " rows.")
-        print("Values: " + all_cols_vals_str)
+        print("Values length: ", len(all_vals))
         return 0
 
     def close(self):
