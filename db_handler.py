@@ -99,7 +99,6 @@ class DB_Handler:
 
         num_of_rows = self.cursor.execute(upd_ins_str).rowcount
         print("Inserted/Updated " + str(num_of_rows) + " rows.")
-        print("Values length: ", len(all_vals))
         return 0
 
     def close(self):

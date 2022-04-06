@@ -21,7 +21,7 @@ def scrape(opt:int = 0):
     '''
     # Get last scrapped link
     try:
-        f = open("last_link.txt", "r", encoding = 'utf-8')       
+        f = open("last_link_doxx.txt", "r", encoding = 'utf-8')       
         start_link_str = f.readline()
         f.close()
     except IOError:
@@ -84,7 +84,7 @@ def scrape(opt:int = 0):
             content_html = driver.page_source
 
             # save last visited link
-            f = open("last_link.txt","w", encoding = 'utf-8')
+            f = open("last_link_doxx.txt","w", encoding = 'utf-8')
             f.write(sport_link)
             f.close()
 

@@ -21,7 +21,7 @@ def scrape(opt:int = 0):
     '''
     # Get last scrapped link
     try:
-        f = open("last_link.txt", "r", encoding = 'utf-8')       
+        f = open("last_link_nike.txt", "r", encoding = 'utf-8')       
         start_link_str = f.readline()
         f.close()
     except IOError:
@@ -136,17 +136,32 @@ def scrape(opt:int = 0):
                 if start_scrape:
 
                     # Go to new page
-                    print("Switching url")   
-                    driver.get(web_url + league)
-                    sleep(randint(5,12))
-                    content_html = driver.page_source
-
-                    content_soup = BeautifulSoup(content_html, 'html.parser')
-                    rows = content_soup.find_all("div", class_="bet-view-prematch-row")
+                    retries = 0
                     # save last visited link
-                    f = open("last_link.txt","w", encoding = 'utf-8')
+                    f = open("last_link_nike.txt","w", encoding = 'utf-8')
                     f.write(league)
                     f.close()
+                    while True:
+                        try:
+                            print("Switching url")   
+                            driver.get(web_url + league)
+                            sleep(randint(5,12))
+                            element = driver.find_element(by=By.XPATH, value ='//*[@id="center-main"]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div').get_attribute('innerHTML')
+                            content_soup = BeautifulSoup(element, 'html.parser')
+                            rows = content_soup.find("div", class_="pl-5").find_all("div", class_="bet-view-prematch-row")
+                            break
+                        except Exception as e:
+                            retries += 1
+                            if retries < 2:
+                                continue
+                            else:
+                                print("ERROR: "+ str(e))
+                                break
+                               
+                    
+                    if retries >= 2:
+                        continue
+
                     print("Found", len(rows), " possible rows")
 
                     results = []
