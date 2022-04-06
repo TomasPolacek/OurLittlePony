@@ -108,6 +108,8 @@ def scrape(opt:int = 0):
             leagues = [le for le in leagues_table_soup.find_all('div', {'ng-repeat':"league in region.leagues"})]
 
             print("Found", len(leagues), " possible leagues")
+
+            results = []
             for league in leagues:
 
                 league_bs = BeautifulSoup(str(league), 'html.parser')
@@ -118,14 +120,14 @@ def scrape(opt:int = 0):
                     continue
                 
                 dates = [d for d in league_bs.find_all('div', {'ng-repeat':"date in league.dates"})]
-
+                
                 for date in dates:
                     date_bs = BeautifulSoup(str(date), 'html.parser')
 
                     res_date = date_bs.find('div', {'class':"td--heading"}).getText().strip().split(" - ")[0]
 
                     rows = date_bs.find_all('div', {'class':"offer__row"})
-                    print("Found", len(rows), " matches in - " + sport_str + " " + league_header)
+                    print("Found", len(rows), "matches in - " + sport_str + " " + league_header)
                     for row in rows:
                         res = {}
                         row_bs = BeautifulSoup(str(row), 'html.parser')
@@ -141,31 +143,26 @@ def scrape(opt:int = 0):
 
                         if len(res_bets) == 6:
                             # 1, 0, 2, 10, 12, 20
-                            res[c.tab_col[5]] = res_bets[0].getText().strip() if res_bets[0].getText().strip() != '-' else '0'
-                            res[c.tab_col[7]] = res_bets[1].getText().strip() if res_bets[1].getText().strip() != '-' else '0'
-                            res[c.tab_col[6]] = res_bets[2].getText().strip() if res_bets[2].getText().strip() != '-' else '0'
-                            res[c.tab_col[8]] = res_bets[3].getText().strip() if res_bets[3].getText().strip() != '-' else '0'
-                            res[c.tab_col[10]] = res_bets[4].getText().strip() if res_bets[4].getText().strip() != '-' else '0'
-                            res[c.tab_col[9]] = res_bets[5].getText().strip() if res_bets[5].getText().strip() != '-' else '0'
+                            res[c.tab_col[5]] = res_bets[0].getText().strip() if res_bets[0].getText().strip() != '-' else '1'
+                            res[c.tab_col[7]] = res_bets[1].getText().strip() if res_bets[1].getText().strip() != '-' else '1'
+                            res[c.tab_col[6]] = res_bets[2].getText().strip() if res_bets[2].getText().strip() != '-' else '1'
+                            res[c.tab_col[8]] = res_bets[3].getText().strip() if res_bets[3].getText().strip() != '-' else '1'
+                            res[c.tab_col[10]] = res_bets[4].getText().strip() if res_bets[4].getText().strip() != '-' else '1'
+                            res[c.tab_col[9]] = res_bets[5].getText().strip() if res_bets[5].getText().strip() != '-' else '1'
 
                         elif len(res_bets) == 5:
                             # 1, 0, 2, 10, 20
-                            res[c.tab_col[5]] = res_bets[0].getText().strip() if res_bets[0].getText().strip() != '-' else '0'
-                            res[c.tab_col[7]] = res_bets[1].getText().strip() if res_bets[1].getText().strip() != '-' else '0'
-                            res[c.tab_col[6]] = res_bets[2].getText().strip() if res_bets[2].getText().strip() != '-' else '0'
-                            res[c.tab_col[8]] = res_bets[3].getText().strip() if res_bets[3].getText().strip() != '-' else '0'
-                            res[c.tab_col[10]] = '0'
-                            res[c.tab_col[9]] = res_bets[5].getText().strip() if res_bets[5].getText().strip() != '-' else '0'
+                            res[c.tab_col[5]] = res_bets[0].getText().strip() if res_bets[0].getText().strip() != '-' else '1'
+                            res[c.tab_col[7]] = res_bets[1].getText().strip() if res_bets[1].getText().strip() != '-' else '1'
+                            res[c.tab_col[6]] = res_bets[2].getText().strip() if res_bets[2].getText().strip() != '-' else '1'
+                            res[c.tab_col[8]] = res_bets[3].getText().strip() if res_bets[3].getText().strip() != '-' else '1'
+                            res[c.tab_col[9]] = res_bets[5].getText().strip() if res_bets[5].getText().strip() != '-' else '1'
                                 
 
                         elif len(res_bets) == 2:
                             # 1, 2
-                            res[c.tab_col[5]] = res_bets[0].getText().strip() if res_bets[0].getText().strip() != '-' else '0'
-                            res[c.tab_col[7]] = '0'
-                            res[c.tab_col[6]] = res_bets[1].getText().strip() if res_bets[1].getText().strip() != '-' else '0'
-                            res[c.tab_col[8]] = '0'
-                            res[c.tab_col[10]] = '0'
-                            res[c.tab_col[9]] = '0'
+                            res[c.tab_col[5]] = res_bets[0].getText().strip() if res_bets[0].getText().strip() != '-' else '1'
+                            res[c.tab_col[6]] = res_bets[1].getText().strip() if res_bets[1].getText().strip() != '-' else '1'
 
                         else:
                             break
@@ -185,7 +182,9 @@ def scrape(opt:int = 0):
                         res[c.tab_col[2]] = "'" + league_header.replace("'","''") + "'"
 
                         res[c.tab_col[0]] = "'" + web_url + "'"
-
-                        psql.upsert(res)
+                        results.append(res)
+            
+            if results:
+                psql.upsert(results)
                     
     psql.close()
