@@ -147,7 +147,9 @@ def scrape(opt:int = 0):
                     f = open("last_link.txt","w", encoding = 'utf-8')
                     f.write(league)
                     f.close()
-                    print("Found", len(rows), " possible rows") 
+                    print("Found", len(rows), " possible rows")
+
+                    results = []
                     for row in rows:
                         res = {}
                         row_bs = BeautifulSoup(str(row).replace("\n", ""), 'html.parser')
@@ -159,31 +161,26 @@ def scrape(opt:int = 0):
                             possible_num = row_bs.find_all("span", class_="bet-center")
                         if len(possible_num) == 6:
                             # 1, 0, 2, 10, 12, 20
-                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
-                            res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "0"
-                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "0"
-                            res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "0"
-                            res[c.tab_col[10]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "0"
-                            res[c.tab_col[9]] = possible_num[5].getText().strip() if possible_num[5].getText().strip() != "" else "0"
+                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
+                            res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
+                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "1"
+                            res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "1"
+                            res[c.tab_col[10]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "1"
+                            res[c.tab_col[9]] = possible_num[5].getText().strip() if possible_num[5].getText().strip() != "" else "1"
 
                         elif len(possible_num) == 5:
                             # 1, 0, 2, 10, 20
-                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
-                            res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "0"
-                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "0"
-                            res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "0"
-                            res[c.tab_col[10]] = "0"
-                            res[c.tab_col[9]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "0"
+                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
+                            res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
+                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "1"
+                            res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "1"
+                            res[c.tab_col[9]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "1"
                             
 
                         elif len(possible_num) == 2:
                             # 1, 2
-                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "0"
-                            res[c.tab_col[7]] = "0"
-                            res[c.tab_col[6]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "0"
-                            res[c.tab_col[8]] = "0"
-                            res[c.tab_col[10]] = "0"
-                            res[c.tab_col[9]] = "0"
+                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
+                            res[c.tab_col[6]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
 
                         else:
                             break
@@ -209,6 +206,9 @@ def scrape(opt:int = 0):
 
                         res[c.tab_col[0]] = "'" + web_url + "'"
 
-                        psql.upsert(res)
+                        results.append(res)
+                    
+                    if results:
+                        psql.upsert(results)
 
     psql.close()
