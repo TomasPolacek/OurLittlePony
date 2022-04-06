@@ -3,15 +3,25 @@ services:
   postgres:
     image: postgres:13
     environment:
+<<<<<<< HEAD
       POSTGRES_USER: admin
+=======
+      POSTGRES_USER: baa
+>>>>>>> main
       POSTGRES_PASSWORD: password
     ports:
       - 5432:5432
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
       - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+<<<<<<< HEAD
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "admin", "arbitrage"]
+=======
+
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "baa"]
+>>>>>>> main
       interval: 5s
       retries: 5
     restart: always

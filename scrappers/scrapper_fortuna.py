@@ -1,15 +1,24 @@
 import random
 import time
 from datetime import datetime
+from smtplib import OLDSTYLE_AUTH
 from webbrowser import Chrome
 
+import config as c
 from bs4 import BeautifulSoup
+from db_handler import DB_Handler
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
-if __name__ == "__main__":
+
+def scrape(opt:int = 0):
+    # DB handler, connect to postgres DB
+    psql = DB_Handler()
+
+    # Delete old records
+    psql.delete_older()
 
     web_link = "https://www.ifortuna.sk"
     # driver = webdriver.Chrome(ChromeDriverManager().install())
@@ -55,8 +64,35 @@ if __name__ == "__main__":
                 except Exception as e:
                     pass
                 if len(record) != 0:
-                    record['sport'] = l.split('/')[2]
+                    record[c.tab_col[0]] = 'fortuna' #web_site
+                    record[c.tab_col[1]] = l.split('/')[2] #sport_type
+                    record[c.tab_col[2]] = l.split('/')[3] #sport_league
+
+
+                    record[c.tab_col[3]] = record[headers[0]].split('-')[0].strip() #team1
+                    record[c.tab_col[4]] = record[headers[0]].split('-')[1].strip() #team2
+                    del record[headers[0]]
+
+                    if 'viac' in record:
+                        del record['viac']
+ 
+                    def swap(new_key,old_key, d: dict):
+                        if old_key in d:
+                            d[new_key] = d[old_key]
+                            del d[old_key]
+
+                    swap(c.tab_col[5], '1', record) #odds_1
+                    swap(c.tab_col[6], '2', record) #odds_2
+                    swap(c.tab_col[7], '0', record)  #odds_x
+                    swap(c.tab_col[8], '10', record)  #odds_1x
+                    swap(c.tab_col[9], '02', record)  #odds_2x
+                    swap(c.tab_col[10], '12', record)  #odds_12
+                    swap(c.tab_col[11], 'dátum', record)  #ts
+
                     records.append(record)
-            print(records)
+            psql.upsert(records)
+    psql.close()
+
+
 
 
