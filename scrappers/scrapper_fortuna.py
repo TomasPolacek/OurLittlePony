@@ -58,6 +58,8 @@ def scrape(opt:int = 0):
                         elif 'dátum' in h:
                             ts = int(bets[i]['data-value']) / 1000
                             to_ins = "'" + str(datetime.fromtimestamp(ts)) + "'"
+                        elif 'viac' in h:
+                            continue
                         else:
                             to_ins = str(abs(float(bets[i].getText().strip())))
                         record[headers[i]] = to_ins
@@ -84,6 +86,7 @@ def scrape(opt:int = 0):
                     swap(c.tab_col[5], '1', record) #odds_1
                     swap(c.tab_col[6], '2', record) #odds_2
                     swap(c.tab_col[7], '0', record)  #odds_x
+                    swap(c.tab_col[7], 'Remíza', record) #odds_x
                     swap(c.tab_col[8], '10', record)  #odds_1x
                     swap(c.tab_col[9], '02', record)  #odds_2x
                     swap(c.tab_col[10], '12', record)  #odds_12
