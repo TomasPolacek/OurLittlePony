@@ -66,164 +66,95 @@ def scrape(opt:int = 0):
     sports_soup = BeautifulSoup(sports_bar, 'html.parser')
     sports = [s for s in sports_soup.find_all('div', class_="menu-item menu-item-0")]
     
-    for idx_sport, sport in enumerate(sports):
+    for sport in sports:
         
         # Extract sport name
         bs_sport = BeautifulSoup(str(sport), 'html.parser')
-        sport_str = str(bs_sport.find('a', href=True)['href']).split('/')[2]
+        sport_link = str(bs_sport.find('a', href=True)['href'])
+        sport_str = sport_link.split('/')[2]
+
         print("Sport category: " + sport_str)
 
-        print("Getting league sub links...")
-        # Uncollapse sport to show leagues
-        if (not start_scrape and sport_str == prev_sport) or start_scrape:   
-            sleep(randint(3,6))
-            element = driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div/div[' + str(idx_sport + 1) + ']/div[1]/a[1]')
-            driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth"})', element)
-            sleep(1)
-            element.click()
-            
-            
-            # Extract element of each league
-            leagues_bar =driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div/div[' + str(idx_sport + 1) + ']/div[2]').get_attribute('innerHTML') 
-            league_soup = BeautifulSoup(leagues_bar, 'html.parser')
-            leagues = [le for le in league_soup.find_all('div', class_="menu-item menu-item-1")]
+        driver.get(web_url + sport_link)
+        sleep(randint(5,7))
+        while True:
+            try:
+                sleep(randint(3,5))
+                print("Loading all leagues into page...")
+                element = driver.find_element(by=By.XPATH, value ='//*[@id="center-main"]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div/button')
+                driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth"})', element)
+            except:
+                break
+        table_element =  driver.find_element(by=By.XPATH, value ='//*[@id="center-main"]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div').get_attribute('innerHTML')
+        table_bs = BeautifulSoup(str(table_element), 'html.parser')
+        leagues = [l for l in table_bs.find_all('div', {'class':"pl-5"})]
 
-            league_links = []
+        for league in leagues:
+            league_bs = BeautifulSoup(str(league), 'html.parser')
+            league_str = league_bs.find('div', {'class':"bets-box-header-title"}).get_text()
 
-            for idx_league, league_link in enumerate(leagues):
-                bs_league = BeautifulSoup(str(league_link), 'html.parser')
-                hrefs = bs_league.find_all('a', href=True)
+            rows = league_bs.find_all('div', {'class':"bet-view-prematch-row"})
+            print("Found", len(rows), " possible rows")
 
-                # League bar contains aditional submenu
-                if len(hrefs) > 2:
+            results = []
+            for row in rows:
+                res = {}
+                row_bs = BeautifulSoup(str(row), 'html.parser')
 
-                    # Scroll element to top
-                    element = driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div/div[' + str(idx_sport + 1) + ']/div[2]/div[' + str(idx_league + 1) + ']/div[1]/a[1]')
-                    driver.execute_script('arguments[0].scrollIntoView({behavior: "smooth"})', element)
-                    sleep(1)
-
-                    # Uncollapse submenu
-                    element.click()
-                    sleep(randint(3,4))
-
-                    # Get submenu content
-                    subleague_bar = driver.find_element(by=By.XPATH, value ='//*[@id="left-column"]/div/div/div/div/div[4]/div/div[' + str(idx_sport + 1) + ']/div[2]/div[' + str(idx_league + 1) + ']/div[2]').get_attribute('innerHTML')
-                    subleague_soup = BeautifulSoup(subleague_bar, 'html.parser')
-                    subleagues = [sle for sle in subleague_soup.find_all('div', class_="menu-item menu-item-2")]
-
-                    # Collapse submenu
-                    element.click()
-
-                    for subleague in subleagues:
-                        bs_subleague = BeautifulSoup(str(subleague), 'html.parser')
-                        subleague_link = bs_subleague.find('a', href=True)['href']
-                        if subleague_link != "/tipovanie":
-                            league_links.append(subleague_link)
+                # Numbers
+                if sport_str == "box":
+                    possible_num = row_bs.find_all("span", class_="bet-right")
                 else:
-                    league_links.append(hrefs[0]['href'])
+                    possible_num = row_bs.find_all("span", class_="bet-center")
+                if len(possible_num) == 6:
+                    # 1, 0, 2, 10, 12, 20
+                    res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
+                    res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
+                    res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "1"
+                    res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "1"
+                    res[c.tab_col[10]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "1"
+                    res[c.tab_col[9]] = possible_num[5].getText().strip() if possible_num[5].getText().strip() != "" else "1"
 
-            print("Found", len(league_links), "league sub links")
-            # League and subleague links
-            print("Iterating...")
-            for league in league_links:
-
-                league_str = league.split('/')[-1]
-                print(league)
-
-                if not start_scrape and prev_league == league_str:
-                    start_scrape = True
-
-                if start_scrape:
-
-                    # Go to new page
-                    retries = 0
-                    # save last visited link
-                    f = open("last_link_nike.txt","w", encoding = 'utf-8')
-                    f.write(league)
-                    f.close()
-                    while True:
-                        try:
-                            print("Switching url")   
-                            driver.get(web_url + league)
-                            sleep(randint(5,12))
-                            element = driver.find_element(by=By.XPATH, value ='//*[@id="center-main"]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div').get_attribute('innerHTML')
-                            content_soup = BeautifulSoup(element, 'html.parser')
-                            rows = content_soup.find("div", class_="pl-5").find_all("div", class_="bet-view-prematch-row")
-                            break
-                        except Exception as e:
-                            retries += 1
-                            if retries < 2:
-                                continue
-                            else:
-                                print("ERROR: "+ str(e))
-                                break
-                               
+                elif len(possible_num) == 5:
+                    # 1, 0, 2, 10, 20
+                    res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
+                    res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
+                    res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "1"
+                    res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "1"
+                    res[c.tab_col[9]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "1"
                     
-                    if retries >= 2:
-                        continue
 
-                    print("Found", len(rows), " possible rows")
+                elif len(possible_num) == 2:
+                    # 1, 2
+                    res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
+                    res[c.tab_col[6]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
 
-                    results = []
-                    for row in rows:
-                        res = {}
-                        row_bs = BeautifulSoup(str(row).replace("\n", ""), 'html.parser')
+                else:
+                    break
 
-                        # Numbers
-                        if sport_str == "box":
-                            possible_num = row_bs.find_all("span", class_="bet-right")
-                        else:
-                            possible_num = row_bs.find_all("span", class_="bet-center")
-                        if len(possible_num) == 6:
-                            # 1, 0, 2, 10, 12, 20
-                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
-                            res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
-                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "1"
-                            res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "1"
-                            res[c.tab_col[10]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "1"
-                            res[c.tab_col[9]] = possible_num[5].getText().strip() if possible_num[5].getText().strip() != "" else "1"
+                # Oponents
+                if sport_str == "box":
+                    oponents = row_bs.find_all("span", class_="bet-left")
+                    res[c.tab_col[3]] = "'" + oponents[0].getText().strip() + "'"
+                    res[c.tab_col[4]] = "'" + oponents[1].getText().strip() + "'"
+                else:
+                    oponents = row_bs.find("button", class_="bets-opponents ellipsis flex items-center").find_all("div")
+                    res[c.tab_col[3]] = "'" + oponents[0].getText().strip() + "'"
+                    res[c.tab_col[4]] = "'" + oponents[2].getText().strip() + "'"
 
-                        elif len(possible_num) == 5:
-                            # 1, 0, 2, 10, 20
-                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
-                            res[c.tab_col[7]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
-                            res[c.tab_col[6]] = possible_num[2].getText().strip() if possible_num[2].getText().strip() != "" else "1"
-                            res[c.tab_col[8]] = possible_num[3].getText().strip() if possible_num[3].getText().strip() != "" else "1"
-                            res[c.tab_col[9]] = possible_num[4].getText().strip() if possible_num[4].getText().strip() != "" else "1"
-                            
+                # Time & date
+                time_in_row =str(re.findall("\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}", str(row_bs))[0]) 
+                res[c.tab_col[11]] = "'" + str(datetime.strptime(time_in_row, '%d.%m.%Y %H:%M')) + "'"
 
-                        elif len(possible_num) == 2:
-                            # 1, 2
-                            res[c.tab_col[5]] = possible_num[0].getText().strip() if possible_num[0].getText().strip() != "" else "1"
-                            res[c.tab_col[6]] = possible_num[1].getText().strip() if possible_num[1].getText().strip() != "" else "1"
+                # Sport category and league (/tipovanie/futbal/anglicko/anglicko-i-liga)
 
-                        else:
-                            break
+                res[c.tab_col[1]] = "'" + sport_str + "'"
+                res[c.tab_col[2]] = "'" + league_str + "'"
 
-                        # Oponents
-                        if sport_str == "box":
-                            oponents = row_bs.find_all("span", class_="bet-left")
-                            res[c.tab_col[3]] = "'" + oponents[0].getText().strip() + "'"
-                            res[c.tab_col[4]] = "'" + oponents[1].getText().strip() + "'"
-                        else:
-                            oponents = row_bs.find("button", class_="bets-opponents ellipsis flex items-center").find_all("div")
-                            res[c.tab_col[3]] = "'" + oponents[0].getText().strip() + "'"
-                            res[c.tab_col[4]] = "'" + oponents[2].getText().strip() + "'"
+                res[c.tab_col[0]] = "'" + web_url + "'"
 
-                        # Time & date
-                        time_in_row =str(re.findall("\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}", str(row_bs))[0]) 
-                        res[c.tab_col[11]] = "'" + str(datetime.strptime(time_in_row, '%d.%m.%Y %H:%M')) + "'"
-
-                        # Sport category and league (/tipovanie/futbal/anglicko/anglicko-i-liga)
-
-                        res[c.tab_col[1]] = "'" + sport_str + "'"
-                        res[c.tab_col[2]] = "'" + league_str + "'"
-
-                        res[c.tab_col[0]] = "'" + web_url + "'"
-
-                        results.append(res)
-                    
-                    if results:
-                        psql.upsert(results)
+                results.append(res)
+            if results:
+                psql.upsert(results)
 
     psql.close()
