@@ -88,15 +88,13 @@ def scrape(opt:int = 0):
         table_element =  driver.find_element(by=By.XPATH, value ='//*[@id="center-main"]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div').get_attribute('innerHTML')
         table_bs = BeautifulSoup(str(table_element), 'html.parser')
         leagues = [l for l in table_bs.find_all('div', {'class':"pl-5"})]
-
+        results = []
         for league in leagues:
             league_bs = BeautifulSoup(str(league), 'html.parser')
             league_str = league_bs.find('div', {'class':"bets-box-header-title"}).get_text()
 
             rows = league_bs.find_all('div', {'class':"bet-view-prematch-row"})
             print("Found", len(rows), " possible rows")
-
-            results = []
             for row in rows:
                 res = {}
                 row_bs = BeautifulSoup(str(row), 'html.parser')
@@ -154,7 +152,7 @@ def scrape(opt:int = 0):
                 res[c.tab_col[0]] = "'" + web_url + "'"
 
                 results.append(res)
-            if results:
-                psql.upsert(results)
+        if results:
+            psql.upsert(results)
 
     psql.close()
