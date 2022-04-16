@@ -28,6 +28,10 @@ class DB_Handler:
         # Composite primary key
         self.pk_str = c.tab_col[0] + ", " + c.tab_col[1] + ", " + c.tab_col[2] + ", " + c.tab_col[3] + ", " + c.tab_col[4]+ ", " + c.tab_col[11]
 
+    def get_dates(self, table: str = c.postgres_tab_name, ts_col: str = c.tab_col[11]):
+        return self.cursor.execute("SELECT DISTINCT date(" + ts_col + ") FROM " + table + " ORDER BY date(" + ts_col + ");").fetchall()
+    
+
     def get_from_date(self, web_site:str = "", date_to_querry:str = "", table: str = c.postgres_tab_name, ts_col: str = c.tab_col[11], web_site_col:str = c.tab_col[0]) -> list:
         
         if date_to_querry == "":
@@ -78,7 +82,7 @@ class DB_Handler:
 
             for col in headers:
                 if col not in row:
-                    row[col] = '1'
+                    row[col] = "'+infinity'"
                 all_cols_vals_str += row[col] + ", " if col != headers[-1] else row[col] + ")"
                 
             all_cols_vals_str += ", " if row != vals[-1] else " "
