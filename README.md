@@ -20,3 +20,13 @@ pip install webdriver-manager
 pip install bs4
 https://www.postgresql.org/ftp/odbc/versions/msi/
 ```
+
+```
+End Doxxbet script execution on success:  2022-04-10 19:55:00.657682
+Script execution:  0:13:28.690864
+
+End Nike script execution on success:  2022-04-10 20:01:06.030333
+Script execution:  0:06:05.371138
+
+
+```

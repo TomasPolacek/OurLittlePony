@@ -37,6 +37,7 @@ def scrape():
 
     for sport in sports:
         # Extract sport name
+            sleep(randint(11,17))
             bs_sport = BeautifulSoup(str(sport), 'html.parser')
             sport_link = str(bs_sport.find('a', href=True)['href'])
             sport_str = sport_link.split('/')[2]
