@@ -22,6 +22,12 @@ tab_col = [
         "odds_12",
         "ts"]
 
+########## discord text channels ##########
+discord_text_channel = {}
+discord_text_channel["test"] = "https://discord.com/api/webhooks/964938193805905991/fmwdq3-zT1Z5B928b5H6cZv-IyMkAyY0H2q3LLHTDnYQXVBBMWIvlLyYntrJVub8AJeY" 
+discord_text_channel["results"] ="https://discord.com/api/webhooks/964965666308370443/5nXJqoBny_KDs6cDucAi9Pq_ugpfyLjdw-xquhjbmg8uSdaeQg1b7ij1y2IU19Pz4wpJ"
+
+
 ########## sports #########
 sport = {}
 sport["badminton"] = "badminton"
