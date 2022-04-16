@@ -99,7 +99,7 @@ def evaluate_bets():
             if res_to_eval:
                 res_to_eval.append(m1)
                 find_arbi(date, res_to_eval, top_ratio_nike_doxx, top_ratio_nike_fort)
-            break
+            
                 
         # Compare Doxx to Fortuna
         for m1 in doxx:
