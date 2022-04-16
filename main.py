@@ -15,9 +15,6 @@ class Logger(object):
         self.log.write(message)  
 
     def flush(self):
-        # this flush method is needed for python 3 compatibility.
-        # this handles the flush command by doing nothing.
-        # you might want to specify some extra behavior here.
         pass    
 
 if __name__ == "__main__":
@@ -30,7 +27,7 @@ if __name__ == "__main__":
         ct = datetime.datetime.now()
         print("-----------------------------")
         print("Start Nike script execution: ",ct)
-        scr_doxx.scrape(0)
+        scr_doxx.scrape()
     except Exception as e:
         print("ERROR: " + str(e))
         print("End Nike script execution on error: ", datetime.datetime.now())
@@ -44,7 +41,7 @@ if __name__ == "__main__":
     print("-----------------------------")
     print("Start Nike script execution: ",ct)
     try: 
-        scr_nike.scrape(0)
+        scr_nike.scrape()
     except Exception as e:
         print("ERROR: " + str(e))
         print("End Nike script execution on error: ", datetime.datetime.now())
@@ -59,7 +56,7 @@ if __name__ == "__main__":
     print("Start Fortuna script execution: ",ct)
         
     try: 
-        scr_fortuna.scrape(0)
+        scr_fortuna.scrape()
     except Exception as e:
         print("ERROR: " + str(e))
         print("End Fortuna script execution on error: ", datetime.datetime.now())
