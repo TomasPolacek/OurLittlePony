@@ -10,39 +10,8 @@ import re
 import config as c
 from db_handler import DB_Handler
 
-def scrape(opt:int = 0):
-    '''
-    Scrape https://www.nike.sk for odds for each event
+def scrape():
 
-    Arguments:
-
-    opt : 0 = Start scraping from the beginning
-          1 = Continue scraping from last execution
-    '''
-    # Get last scrapped link
-    try:
-        f = open("last_link_doxx.txt", "r", encoding = 'utf-8')       
-        start_link_str = f.readline()
-        f.close()
-    except IOError:
-        start_link_str = ""
-
-    if opt == 0: 
-        start_link_str = ""
-        start_scrape = True
-        print("Start scrapping from the beginning")
-    elif opt == 1: 
-        start_scrape = False
-        print("Start scrapping from last script execution: " + start_link_str)
-
-    if not start_scrape and start_link_str != "":
-        prev_sport = start_link_str.split('/')[2]
-        prev_league = start_link_str.split('/')[-1]
-        print("File not found or empty, starting scrapping from the beginning instead.")
-    else:
-        start_scrape = True
-
-    # Get last scrapped link
     web_url = "https://www.doxxbet.sk/"
 
     # Install Chrome driver
@@ -82,11 +51,6 @@ def scrape(opt:int = 0):
             driver.get(web_url + sport_link)
             sleep(randint(5,12))
             content_html = driver.page_source
-
-            # save last visited link
-            f = open("last_link_doxx.txt","w", encoding = 'utf-8')
-            f.write(sport_link)
-            f.close()
 
             # Load all bets by collapsing Sport menu
             element = driver.find_element(by=By.XPATH, value ='//*[@id="offers-nonlive"]/div[2]/div/div[1]')
@@ -178,7 +142,12 @@ def scrape(opt:int = 0):
                             time_in_row = res_date + " " + res_time[0]
                         res[c.tab_col[11]] = "'" + str(datetime.strptime(time_in_row, '%d.%m.%Y %H:%M')) + "'"
 
-                        res[c.tab_col[1]] = "'" + sport_str.replace("'","''") + "'"
+                        try:
+                            res[c.tab_col[1]] = "'" + c.sport[sport_str] + "'"
+                        except:
+                            print(f"New sport category detected: {sport_str}, add it to config later!")
+                            res[c.tab_col[1]] = "'" + sport_str + "'"
+                            
                         res[c.tab_col[2]] = "'" + league_header.replace("'","''") + "'"
 
                         res[c.tab_col[0]] = "'" + web_url + "'"
