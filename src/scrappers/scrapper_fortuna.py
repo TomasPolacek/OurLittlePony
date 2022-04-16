@@ -1,15 +1,12 @@
-import random
 import time
 from datetime import datetime
 from smtplib import OLDSTYLE_AUTH
-from webbrowser import Chrome
 
-import config as c
+import src.config as c
 from bs4 import BeautifulSoup
-from db_handler import DB_Handler
+from src.db_handler import DB_Handler
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
 
@@ -26,7 +23,6 @@ def scrape(opt:int = 0):
     time.sleep(5)
     sports_bar = driver.find_element(by=By.XPATH, value ='//*[@id="filterbox-ref-sport-tree"]').get_attribute('innerHTML')
     soup = BeautifulSoup(sports_bar)
-    sports = soup.find_all("li")
     links = [l.find('a')['href'] for l in soup.find_all("li","item-sport")]
     ignore =  ['favorit-plus','zabava','duel','stane-sa-v-roku-2022']
 
@@ -126,6 +122,7 @@ def scrape(opt:int = 0):
                         records.append(record)
             if records:
                 psql.upsert(records)
+        
 
     psql.close()
 

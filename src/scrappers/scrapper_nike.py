@@ -7,8 +7,8 @@ from time import sleep
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
-import config as c
-from db_handler import DB_Handler
+import src.config as c
+from src.db_handler import DB_Handler
 
 def scrape():
 
@@ -128,5 +128,7 @@ def scrape():
                 results.append(res)
         if results:
             psql.upsert(results)
+
+        
 
     psql.close()

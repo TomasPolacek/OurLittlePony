@@ -2,7 +2,7 @@ from datetime import date
 
 import pyodbc
 
-import config as c
+import src.config as c
 
 
 class DB_Handler:

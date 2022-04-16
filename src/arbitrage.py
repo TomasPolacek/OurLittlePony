@@ -1,21 +1,8 @@
-from db_handler import DB_Handler
+from src.db_handler import DB_Handler
 from fuzzywuzzy import fuzz
-import sys
-
-class Logger(object):
-    def __init__(self):
-        self.terminal = sys.stdout
-        self.log = open("arbi_log.txt", "w", encoding="utf-8")
-   
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)  
-
-    def flush(self):
-        pass 
 
 
-def find_arbi(res, r1, r2):
+def find_arbi(date, res, r1, r2):
     print('---------------')
     for result in res:
         print(result[0:11]) 
@@ -33,11 +20,11 @@ def find_arbi(res, r1, r2):
     print(f"Magic number: {arbitrage_ratio}")
     if 0.92 < arbitrage_ratio < 1.0 :
         
-        with open("arbi_res.txt", "a", encoding="utf-8") as file:
+        with open("logs/arbi_res.txt", "a", encoding="utf-8") as file:
             file.write("---------------\n")
             for result in res:
                 file.write(str(result[0:11]) + "\n")
-            file.write(f"{date[0]}\nString match ratios: \nr1 = {top_ratio_nike_doxx}, \nr2 = {top_ratio_nike_fort}\n")
+            file.write(f"{date[0]}\nString match ratios: \nr1 = {r1}, \nr2 = {r2}\n")
             file.write(f"Magic number: {arbitrage_ratio}\n")
             file.write("!!!!! Arbitrage found !!!!!\nLet 'x' be your desired win, bet like so:\n")
             for i in range(len(odds)):
@@ -50,7 +37,7 @@ def find_arbi(res, r1, r2):
     print('---------------')
     
 
-if __name__ == "__main__":
+def evaluate_bets():
 
     # fuzzy wuzzy match ratio treshold 
     ratio_tresh = 70
@@ -64,10 +51,8 @@ if __name__ == "__main__":
     # Get all dates in table
     dates = psql.get_dates()
 
-    with open("arbi_res.txt", "w", encoding="utf-8") as file:
+    with open("logs/arbi_res.txt", "w", encoding="utf-8") as file:
         file.write("Hehe\n\n\n\n")
-
-    sys.stdout = Logger()
 
     for date in dates:
         nike = psql.get_from_date("https://www.nike.sk",date[0].strftime('%Y/%m/%d'))
@@ -107,7 +92,8 @@ if __name__ == "__main__":
 
             if res_to_eval:
                 res_to_eval.append(m1)
-                find_arbi(res_to_eval, top_ratio_nike_doxx, top_ratio_nike_fort)
+                find_arbi(date, res_to_eval, top_ratio_nike_doxx, top_ratio_nike_fort)
+            break
                 
         # Compare Doxx to Fortuna
         for m1 in doxx:
@@ -135,4 +121,4 @@ if __name__ == "__main__":
             
             if res_to_eval:
                 res_to_eval.append(m1)
-                find_arbi(res_to_eval, top_ratio_doxx_fort, 0)
+                find_arbi(date, res_to_eval, top_ratio_doxx_fort, 0)

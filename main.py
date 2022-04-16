@@ -1,14 +1,14 @@
 import datetime
 import sys
-import os
-import scrappers.scrapper_doxxbet as scr_doxx
-import scrappers.scrapper_fortuna as scr_fortuna
-import scrappers.scrapper_nike as scr_nike
+import src.scrappers.scrapper_doxxbet as scr_doxx
+import src.scrappers.scrapper_fortuna as scr_fortuna
+import src.scrappers.scrapper_nike as scr_nike
+import src.arbitrage as arbi
 
 class Logger(object):
-    def __init__(self):
+    def __init__(self, name):
         self.terminal = sys.stdout
-        self.log = open("log.txt", "w", encoding="utf-8")
+        self.log = open("logs/" + name + ".txt", "w", encoding="utf-8")
    
     def write(self, message):
         self.terminal.write(message)
@@ -20,7 +20,7 @@ class Logger(object):
 if __name__ == "__main__":
     
 
-    sys.stdout = Logger()
+    sys.stdout = Logger("log")
 
     # Doxxbet scrapper
     try: 
@@ -62,4 +62,19 @@ if __name__ == "__main__":
         print("End Fortuna script execution on error: ", datetime.datetime.now())
     else:
         print("End Fortuna  script execution on success: ", datetime.datetime.now())    
+    print("Script execution: ", datetime.datetime.now() - ct)
+
+
+    # Evaluate bets
+    ct = datetime.datetime.now()
+    print("-----------------------------")
+    print("Start arbitrage script execution: ",ct)
+        
+    try: 
+        arbi.evaluate_bets()
+    except Exception as e:
+        print("ERROR: " + str(e))
+        print("End arbitrage script execution on error: ", datetime.datetime.now())
+    else:
+        print("End arbitrage  script execution on success: ", datetime.datetime.now())    
     print("Script execution: ", datetime.datetime.now() - ct)

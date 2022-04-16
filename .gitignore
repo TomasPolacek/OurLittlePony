@@ -2,6 +2,4 @@ __pycache__
 scrappers/__pycache__
 postgres/postgres-data
 test.py
-log.txt
-arbi_log.txt
-arbi_res.txt
+logs/*
