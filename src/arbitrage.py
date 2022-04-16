@@ -1,11 +1,15 @@
 from src.db_handler import DB_Handler
 from fuzzywuzzy import fuzz
+import src.webhook.discord_webhook as dw
+import src.config as c
 
 
 def find_arbi(date, res, r1, r2):
     print('---------------')
+    text = {}
     for result in res:
-        print(result[0:11]) 
+        print(result[0:11])
+            
     print(f"{date[0]}\nString match ratios: \nr1 = {r1}, \nr2 = {r2}")
     odds = []
     for i in range(3):
@@ -18,19 +22,19 @@ def find_arbi(date, res, r1, r2):
     arbitrage_ratio = sum(ratios)
 
     print(f"Magic number: {arbitrage_ratio}")
-    if 0.92 < arbitrage_ratio < 1.0 :
+    if 0.90 < arbitrage_ratio < 1.0 :
         
-        with open("logs/arbi_res.txt", "a", encoding="utf-8") as file:
-            file.write("---------------\n")
-            for result in res:
-                file.write(str(result[0:11]) + "\n")
-            file.write(f"{date[0]}\nString match ratios: \nr1 = {r1}, \nr2 = {r2}\n")
-            file.write(f"Magic number: {arbitrage_ratio}\n")
-            file.write("!!!!! Arbitrage found !!!!!\nLet 'x' be your desired win, bet like so:\n")
-            for i in range(len(odds)):
-                file.write(f"  x * {ratios[i]}$ on {odds[i]},\n")
-            file.write("---------------\n\n")
+        text["desc"] = ""
+        for result in res:
+            text["desc"] += str(result[0:11]) + "\n"
+        text["desc"] += str(res[0][11])
+        text["fields"] = []
+        for i in range(len(odds)):
+            if ratios[i] > 0:
+                text["fields"].append({"name":str(f"{100 * ratios[i]:.2f}€"), "value":str(f"on {odds[i][0]} in {odds[i][1]}")})
 
+        text["magic"] = str(f"{(1 - arbitrage_ratio)*100:.2f}%")
+        dw.send_msg(text)
         print("!!!!! Arbitrage found !!!!!")
     else:
         print("Nope")
@@ -68,6 +72,8 @@ def evaluate_bets():
             top_ratio_nike_doxx = 0
             found_match2 = None
             for m2 in doxx:
+                if m2[1] == c.sport["baseball"]:
+                    continue
                 ratio = fuzz.partial_ratio(m1[3],m2[3]) + fuzz.partial_ratio(m1[4],m2[4]) # compare opponets
                 if ratio > ratio_tresh * 2 and  ratio > top_ratio_nike_doxx and m2[11]==m1[11] and m1[1] in m2[1]:
                     top_ratio_nike_doxx = ratio
@@ -97,8 +103,9 @@ def evaluate_bets():
                 
         # Compare Doxx to Fortuna
         for m1 in doxx:
-
-            if m1 in to_skip:
+            
+            # skip baseball because doxx has more odds
+            if m1 in to_skip or m1[1] == c.sport["baseball"]:
                 continue
 
             res_to_eval = []
