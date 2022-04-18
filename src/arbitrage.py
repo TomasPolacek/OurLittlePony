@@ -1,20 +1,30 @@
+from math import inf
 from src.db_handler import DB_Handler
 from fuzzywuzzy import fuzz
 import src.webhook.discord_webhook as dw
 import src.config as c
 
+def max_finite(list):
+    max_value = None
+    for num in list:
+        if (max_value is None or max_value < num) and num < float('inf'):
+            max_value = num
+    return max_value if max_value else list[0]
 
-def find_arbi(date, res, r1, r2):
+def find_arbi(date, res, ratio):
     print('---------------')
     text = {}
     for result in res:
         print(result[0:11])
             
-    print(f"{date[0]}\nString match ratios: \nr1 = {r1}, \nr2 = {r2}")
+    print(f"{date[0]}\nString match ratios:")
+    for idx,r in enumerate(ratio):
+        print(f"r{idx+1} = {r}")
+
     odds = []
     for i in range(3):
-        odd_list = [r[5+i] for r in res]
-        odd = max(odd_list)
+        odd_list = [r[5+i] for r in res]   
+        odd = max_finite(odd_list)
         source = odd_list.index(odd)
         odds.append((odd,res[source][0]))
 
@@ -59,73 +69,39 @@ def evaluate_bets():
         file.write("Hehe\n\n\n\n")
 
     for date in dates:
-        nike = psql.get_from_date("https://www.nike.sk",date[0].strftime('%Y/%m/%d'))
-        doxx = psql.get_from_date("https://www.doxxbet.sk/",date[0].strftime('%Y/%m/%d'))
-        fort = psql.get_from_date("https://www.ifortuna.sk",date[0].strftime('%Y/%m/%d'))
+        bookies = [
+            psql.get_from_date("https://www.nike.sk",date[0].strftime('%Y/%m/%d')),
+            psql.get_from_date("https://www.doxxbet.sk/",date[0].strftime('%Y/%m/%d')),
+            psql.get_from_date("https://www.ifortuna.sk",date[0].strftime('%Y/%m/%d')),
+            psql.get_from_date("https://www.etipos.sk",date[0].strftime('%Y/%m/%d'))
+        ]
         to_skip = []
 
-        # Compare Nike to Doxx, Fortuna
-        for m1 in nike:
-            res_to_eval = []
-
-            # Find Nike match in Doxx
-            top_ratio_nike_doxx = 0
-            found_match2 = None
-            for m2 in doxx:
-                if m2[1] == c.sport["baseball"]:
-                    continue
-                ratio = fuzz.partial_ratio(m1[3],m2[3]) + fuzz.partial_ratio(m1[4],m2[4]) # compare opponets
-                if ratio > ratio_tresh * 2 and  ratio > top_ratio_nike_doxx and m2[11]==m1[11] and m1[1] in m2[1]:
-                    top_ratio_nike_doxx = ratio
-                    found_match2 = m2
-
-            # Find Nike match in Fortuna
-            top_ratio_nike_fort = 0
-            found_match3 = None
-            for m3 in fort:
-                ratio = fuzz.partial_ratio(m1[3],m3[3]) + fuzz.partial_ratio(m1[4],m3[4]) # compare opponets
-                if ratio > ratio_tresh * 2 and  ratio > top_ratio_nike_fort and m3[11]==m1[11] and m1[1] in m3[1]:
-                    top_ratio_nike_fort = ratio
-                    found_match3 = m3
-
-            if found_match2:
-                res_to_eval.append(found_match2)
-                to_skip.append(found_match2)
-
-            if found_match3:
-                res_to_eval.append(found_match3)
-                to_skip.append(found_match3)
-
-            if res_to_eval:
-                res_to_eval.append(m1)
-                find_arbi(date, res_to_eval, top_ratio_nike_doxx, top_ratio_nike_fort)
-            
-                
-        # Compare Doxx to Fortuna
-        for m1 in doxx:
-            
-            # skip baseball because doxx has more odds
-            if m1 in to_skip or m1[1] == c.sport["baseball"]:
-                continue
-
-            res_to_eval = []
-
-            top_ratio_doxx_fort = 0
-            found_match2 = None
-            for m2 in fort:
-
-                if m2 in to_skip:
+        for i,bookie1 in enumerate(bookies[:-1]):
+            for event1 in bookie1:
+                res_to_eval = []
+                ratios = []
+                if event1 in to_skip:
                     continue
 
-                ratio = fuzz.partial_ratio(m1[3],m2[3]) + fuzz.partial_ratio(m1[4],m2[4]) # compare opponets
-                if ratio > ratio_tresh * 2 and  ratio > top_ratio_doxx_fort and m2[11]==m1[11] and m1[1] in m2[1]:
-                    top_ratio_doxx_fort = ratio
-                    found_match2 = m2
+                for bookie2 in bookies[i+1:]:
+                    top_ratio = 0
+                    found_match = None
 
-            if found_match2:
-                res_to_eval.append(found_match2)
-                to_skip.append(found_match2)
-            
-            if res_to_eval:
-                res_to_eval.append(m1)
-                find_arbi(date, res_to_eval, top_ratio_doxx_fort, 0)
+                    for event2 in bookie2:
+                        if event2 in to_skip:
+                            continue
+
+                        ratio = fuzz.partial_ratio(event1[3],event2[3]) + fuzz.partial_ratio(event1[4],event2[4])
+                        if ratio > ratio_tresh * 2 and  ratio > top_ratio and event1[11]==event2[11] and event1[1] in event2[1]:
+                            top_ratio = ratio
+                            found_match = event2
+
+                    if found_match:
+                        res_to_eval.append(found_match)
+                        ratios.append(top_ratio)
+                        to_skip.append(found_match)
+
+                if res_to_eval:
+                    res_to_eval.append(event1)
+                    find_arbi(date, res_to_eval, ratios)

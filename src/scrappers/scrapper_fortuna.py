@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
-def scrape(opt:int = 0):
+def scrape():
     # DB handler, connect to postgres DB
     psql = DB_Handler()
 
@@ -125,7 +125,3 @@ def scrape(opt:int = 0):
         
 
     psql.close()
-
-
-
-
