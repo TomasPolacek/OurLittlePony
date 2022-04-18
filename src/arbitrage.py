@@ -65,9 +65,6 @@ def evaluate_bets():
     # Get all dates in table
     dates = psql.get_dates()
 
-    with open("logs/arbi_res.txt", "w", encoding="utf-8") as file:
-        file.write("Hehe\n\n\n\n")
-
     for date in dates:
         bookies = [
             psql.get_from_date("https://www.nike.sk",date[0].strftime('%Y/%m/%d')),
