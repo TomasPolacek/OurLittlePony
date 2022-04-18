@@ -2,4 +2,3 @@ __pycache__
 scrappers/__pycache__
 postgres/postgres-data
 test.py
-logs/*

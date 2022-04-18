@@ -1,20 +1,27 @@
+from math import inf
 from src.db_handler import DB_Handler
 from fuzzywuzzy import fuzz
 import src.webhook.discord_webhook as dw
 import src.config as c
 
+def max_finite(list):
+    max_value = None
+    for num in list:
+        if (max_value is None or max_value < num) and num < float('inf'):
+            max_value = num
+    return max_value if max_value else list[0]
 
-def find_arbi(date, res, r1, r2):
+def find_arbi(date, res, r1, r2, r3):
     print('---------------')
     text = {}
     for result in res:
         print(result[0:11])
             
-    print(f"{date[0]}\nString match ratios: \nr1 = {r1}, \nr2 = {r2}")
+    print(f"{date[0]}\nString match ratios: \nr1 = {r1}, \nr2 = {r2}, \nr3 = {r3}")
     odds = []
     for i in range(3):
-        odd_list = [r[5+i] for r in res]
-        odd = max(odd_list)
+        odd_list = [r[5+i] for r in res]   
+        odd = max_finite(odd_list)
         source = odd_list.index(odd)
         odds.append((odd,res[source][0]))
 
@@ -62,9 +69,10 @@ def evaluate_bets():
         nike = psql.get_from_date("https://www.nike.sk",date[0].strftime('%Y/%m/%d'))
         doxx = psql.get_from_date("https://www.doxxbet.sk/",date[0].strftime('%Y/%m/%d'))
         fort = psql.get_from_date("https://www.ifortuna.sk",date[0].strftime('%Y/%m/%d'))
+        etipos = psql.get_from_date("eTipos",date[0].strftime('%Y/%m/%d'))
         to_skip = []
 
-        # Compare Nike to Doxx, Fortuna
+        # Compare Nike to Doxx, Fortuna, eTipos
         for m1 in nike:
             res_to_eval = []
 
@@ -88,6 +96,15 @@ def evaluate_bets():
                     top_ratio_nike_fort = ratio
                     found_match3 = m3
 
+            # Find Nike match in etipos
+            top_ratio_nike_etipos = 0
+            found_match4 = None
+            for m4 in etipos:
+                ratio = fuzz.partial_ratio(m1[3],m4[3]) + fuzz.partial_ratio(m1[4],m4[4]) # compare opponets
+                if ratio > ratio_tresh * 2 and  ratio > top_ratio_nike_etipos and m4[11]==m1[11] and m1[1] in m4[1]:
+                    top_ratio_nike_etipos = ratio
+                    found_match4 = m4
+
             if found_match2:
                 res_to_eval.append(found_match2)
                 to_skip.append(found_match2)
@@ -95,13 +112,17 @@ def evaluate_bets():
             if found_match3:
                 res_to_eval.append(found_match3)
                 to_skip.append(found_match3)
+            
+            if found_match4:
+                res_to_eval.append(found_match4)
+                to_skip.append(found_match4)
 
             if res_to_eval:
                 res_to_eval.append(m1)
-                find_arbi(date, res_to_eval, top_ratio_nike_doxx, top_ratio_nike_fort)
+                find_arbi(date, res_to_eval, top_ratio_nike_doxx, top_ratio_nike_fort, top_ratio_nike_etipos)
             
                 
-        # Compare Doxx to Fortuna
+        # Compare Doxx to Fortuna, eTipos
         for m1 in doxx:
             
             # skip baseball because doxx has more odds
@@ -121,6 +142,53 @@ def evaluate_bets():
                 if ratio > ratio_tresh * 2 and  ratio > top_ratio_doxx_fort and m2[11]==m1[11] and m1[1] in m2[1]:
                     top_ratio_doxx_fort = ratio
                     found_match2 = m2
+            
+            
+            top_ratio_doxx_etipos = 0
+            found_match3 = None
+            for m3 in etipos:
+
+                if m3 in to_skip:
+                    continue
+
+                ratio = fuzz.partial_ratio(m1[3],m3[3]) + fuzz.partial_ratio(m1[4],m3[4]) # compare opponets
+                if ratio > ratio_tresh * 2 and  ratio > top_ratio_doxx_etipos and m3[11]==m1[11] and m1[1] in m3[1]:
+                    top_ratio_doxx_etipos = ratio
+                    found_match3 = m3
+
+            if found_match2:
+                res_to_eval.append(found_match2)
+                to_skip.append(found_match2)
+
+            if found_match3:
+                res_to_eval.append(found_match3)
+                to_skip.append(found_match3)
+            
+            if res_to_eval:
+                res_to_eval.append(m1)
+                find_arbi(date, res_to_eval, top_ratio_doxx_fort, top_ratio_doxx_etipos, 0)
+
+
+        # Compare Fortuna to eTipos
+        for m1 in doxx:
+            
+            if m1 in to_skip:
+                continue
+
+            res_to_eval = []
+
+            top_ratio_fort_etipos = 0
+            found_match2 = None
+            for m2 in fort:
+
+                if m2 in to_skip:
+                    continue
+
+                ratio = fuzz.partial_ratio(m1[3],m2[3]) + fuzz.partial_ratio(m1[4],m2[4]) # compare opponets
+                if ratio > ratio_tresh * 2 and  ratio > top_ratio_fort_etipos and m2[11]==m1[11] and m1[1] in m2[1]:
+                    top_ratio_fort_etipos = ratio
+                    found_match2 = m2
+            
 
             if found_match2:
                 res_to_eval.append(found_match2)
@@ -128,4 +196,4 @@ def evaluate_bets():
             
             if res_to_eval:
                 res_to_eval.append(m1)
-                find_arbi(date, res_to_eval, top_ratio_doxx_fort, 0)
+                find_arbi(date, res_to_eval, top_ratio_fort_etipos, 0, 0)
