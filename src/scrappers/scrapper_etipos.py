@@ -60,7 +60,7 @@ for sport in sports:
         league_table = league_tables[idx]
 
         sport_str = league_header.find('div', {'class':"sport-name"}).get_text()
-        league_str = league_header.find('div', {'class':"sub-header"}).get_text()
+        league_str = league_header.find('div', {'class':"sub-header"}).get_text().replace("\xa0/\xa0"," / ")
 
         type_of_bet = league_table.find('div', {'class':"event-info-col"}).getText().strip()
         type3 = ["Zápas"]
@@ -69,9 +69,6 @@ for sport in sports:
         rows = league_table.find_all('div', {'class':"grid-table-row"})
         for row in rows:
             res = {}
-
-            oponents = row.find('div', {'class':"match-label"}).getText().split('-')
-            res[c.tab_col[11]] = str(datetime.strptime(re.search('pt-3">(.*)</div>',str(row.find('div', {'class':"date-col"}))).group(1).replace("<br/>"," "), '%d.%m.%y %H:%M'))
             odds = [odd for odd in row.find('div', {'class':"odds-col"}).find_all('div', {'class':"col-8"})]
             
             is_type2 = [con for con in type2 if(con in type_of_bet)]
@@ -82,7 +79,11 @@ for sport in sports:
                 res[c.tab_col[5]] = odds[0].getText()[-4:].replace(",",".") if odds[0].getText() != "" else "1"
                 res[c.tab_col[7]] = odds[1].getText()[-4:].replace(",",".") if odds[1].getText() != "" else "1"
                 res[c.tab_col[6]] = odds[2].getText()[-4:].replace(",",".") if odds[2].getText() != "" else "1"
-            
+            else:
+                continue
+
+            res[c.tab_col[11]] ="'" +  str(datetime.strptime(re.search('pt-3">(.*)</div>',str(row.find('div', {'class':"date-col"}))).group(1).replace("<br/>"," "), '%d.%m.%y %H:%M')) + "'"
+            oponents = row.find('div', {'class':"match-label"}).getText().split('-')
             res[c.tab_col[3]] = "'" + oponents[0] + "'"
             res[c.tab_col[4]] = "'" + oponents[1] + "'"
 
@@ -95,6 +96,5 @@ for sport in sports:
             res[c.tab_col[2]] = "'" + league_str + "'"
             res[c.tab_col[0]] = "'" + "eTipos" + "'"
             results.append(res)
-            print(res)
-    # if results:
-    #     psql.upsert(results)
+    if results:
+        psql.upsert(results)
