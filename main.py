@@ -65,19 +65,19 @@ if __name__ == "__main__":
     #     print("End Fortuna  script execution on success: ", datetime.datetime.now())    
     # print("Script execution: ", datetime.datetime.now() - ct)
 
-    # # eTipos scrapper
-    # ct = datetime.datetime.now()
-    # print("-----------------------------")
-    # print("Start eTipos script execution: ",ct)
+    # eTipos scrapper
+    ct = datetime.datetime.now()
+    print("-----------------------------")
+    print("Start eTipos script execution: ",ct)
         
-    # try: 
-    #     scr_etipos.scrape()
-    # except Exception as e:
-    #     print("ERROR: " + str(e))
-    #     print("End eTipos script execution on error: ", datetime.datetime.now())
-    # else:
-    #     print("End eTipos  script execution on success: ", datetime.datetime.now())    
-    # print("Script execution: ", datetime.datetime.now() - ct)
+    try: 
+        scr_etipos.scrape()
+    except Exception as e:
+        print("ERROR: " + str(e))
+        print("End eTipos script execution on error: ", datetime.datetime.now())
+    else:
+        print("End eTipos  script execution on success: ", datetime.datetime.now())    
+    print("Script execution: ", datetime.datetime.now() - ct)
 
 
     ############################################################################################
@@ -95,3 +95,5 @@ if __name__ == "__main__":
     else:
         print("End arbitrage  script execution on success: ", datetime.datetime.now())    
     print("Script execution: ", datetime.datetime.now() - ct)
+
+
