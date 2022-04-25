@@ -1,4 +1,5 @@
 from datetime import date
+from typing import List
 
 import pyodbc
 
@@ -58,7 +59,7 @@ class DB_Handler:
         print("Deleted " + str(num_of_rows) + " old records")
         return 0
 
-    def upsert(self, vals: list[dict], table: str = c.postgres_tab_name, headers: list[str] = None) -> int:
+    def upsert(self, vals: List[dict], table: str = c.postgres_tab_name, headers: List[str] = None) -> int:
 
         """
         Insert values into a table. If record exists, update odds columns instead.
