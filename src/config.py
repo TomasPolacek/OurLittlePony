@@ -8,7 +8,7 @@ postgres_db = "baa"
 postgres_tab_name = "bets"
 
 ########## discord text channels ##########
-webhook = "https://discord.com/api/webhooks/964938193805905991/fmwdq3-zT1Z5B928b5H6cZv-IyMkAyY0H2q3LLHTDnYQXVBBMWIvlLyYntrJVub8AJeY" 
+webhook = "" 
 
 
 ############### Table columns ###############
