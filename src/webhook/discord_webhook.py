@@ -2,7 +2,7 @@ import requests
 import src.config as c
 
 def send_msg(text):
-    url = c.discord_text_channel["test"]
+    url = c.webhook
     
     data = {
         "content" : ".\nPossible arbitrage\n```" + text["desc"] + "```",

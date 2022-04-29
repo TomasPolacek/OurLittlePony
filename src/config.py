@@ -7,6 +7,10 @@ postgres_pass = "password"
 postgres_db = "baa"
 postgres_tab_name = "bets"
 
+########## discord text channels ##########
+webhook = "https://discord.com/api/webhooks/964938193805905991/fmwdq3-zT1Z5B928b5H6cZv-IyMkAyY0H2q3LLHTDnYQXVBBMWIvlLyYntrJVub8AJeY" 
+
+
 ############### Table columns ###############
 tab_col = [
         "web_site",
@@ -21,12 +25,6 @@ tab_col = [
         "odds_2x",
         "odds_12",
         "ts"]
-
-########## discord text channels ##########
-discord_text_channel = {}
-discord_text_channel["test"] = "https://discord.com/api/webhooks/964938193805905991/fmwdq3-zT1Z5B928b5H6cZv-IyMkAyY0H2q3LLHTDnYQXVBBMWIvlLyYntrJVub8AJeY" 
-discord_text_channel["results"] ="https://discord.com/api/webhooks/964965666308370443/5nXJqoBny_KDs6cDucAi9Pq_ugpfyLjdw-xquhjbmg8uSdaeQg1b7ij1y2IU19Pz4wpJ"
-
 
 ########## sports #########
 sport = {}
@@ -52,7 +50,6 @@ sport["pozemny-hokej"] = "pozemny-hokej"
 sport["futbal"] = "futbal"
 sport["hadzana"] = "hadzana"
 sport["squash"] = "squash"
-
 sport["bedminton"] = "badminton"
 sport["rugby-league"] = "rugby"
 sport["americky-futbal"] = "americky-futbal"
@@ -61,7 +58,6 @@ sport["e-sport"] = "e-sporty"
 sport["ladovy-hokej"] = "hokej"
 sport["hokejbal"] = "hokejbal"
 sport["sportove-simulacie"] = "sportove-simulacie"
-
 sport["Baseball"] = "baseball"
 sport["Hádzaná"] = "hadzana"
 sport["Tenis"] = "tenis"

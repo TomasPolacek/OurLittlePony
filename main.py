@@ -21,12 +21,12 @@ class Logger(object):
         pass    
 
 if __name__ == "__main__":
+    t_start = datetime.datetime.now()
+
     sys.stdout = Logger("log")
     scrapers = [ScraperEtipos(), ScraperFortuna(), ScraperNike(), ScraperDoxxbet()]
 
-    ############################################################################################
     ####################################### Scrape #############################################
-    ############################################################################################
 
     for scraper in scrapers:
         ct = datetime.datetime.now()
@@ -41,20 +41,19 @@ if __name__ == "__main__":
             print(f"End {scraper.name} script execution on success: {datetime.datetime.now()}")    
         print(f"Script execution: {datetime.datetime.now() - ct}")
 
-    ############################################################################################
+
     ################################### Evaluate bets ##########################################
-    ############################################################################################
     ct = datetime.datetime.now()
     print("-----------------------------")
-    print("Start arbitrage script execution: ",ct)
+    print(f"Start arbitrage script execution: {ct}")
         
     try: 
         arbi.evaluate_bets()
     except Exception as e:
         print("ERROR: " + str(e))
-        print("End arbitrage script execution on error: ", datetime.datetime.now())
+        print(f"End arbitrage script execution on error: {datetime.datetime.now()}") 
     else:
-        print("End arbitrage  script execution on success: ", datetime.datetime.now())    
-    print("Script execution: ", datetime.datetime.now() - ct)
+        print(f"End arbitrage script execution on success: {datetime.datetime.now()}")    
+    print(f"Script execution: {datetime.datetime.now() - ct}")
 
-
+    print(f"Total execution time: {datetime.datetime.now() - t_start}")

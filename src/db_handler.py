@@ -30,10 +30,28 @@ class DB_Handler:
         self.pk_str = c.tab_col[0] + ", " + c.tab_col[1] + ", " + c.tab_col[2] + ", " + c.tab_col[3] + ", " + c.tab_col[4]+ ", " + c.tab_col[11]
 
     def get_dates(self, table: str = c.postgres_tab_name, ts_col: str = c.tab_col[11]):
+        """
+        Query dates
+        Returns unique date records
+        Arguments:
+        
+        table (optional) : Name of a table, default = config.postgres_tab_name
+        
+        """
         return self.cursor.execute("SELECT DISTINCT date(" + ts_col + ") FROM " + table + " ORDER BY date(" + ts_col + ");").fetchall()
     
 
     def get_from_date(self, web_site:str = "", date_to_querry:str = "", table: str = c.postgres_tab_name, ts_col: str = c.tab_col[11], web_site_col:str = c.tab_col[0]) -> list:
+        """
+        Query records
+        Returns data records
+        Arguments:
+        web_site : Filter result to a specific website/bookmaker. If not specified, all records are queried.
+        date_to_querry : Filter result to a specific date. If not specified, TODAY is used.
+        table (optional) : Name of a table, default = config.postgres_tab_name
+        headers (optional) : Name of columns, default = all
+        
+        """
         
         if date_to_querry == "":
             date_to_querry = date.today().strftime('%Y/%m/%d')
@@ -45,12 +63,9 @@ class DB_Handler:
 
     def delete_older(self, ts: str = "current_timestamp(0)", table: str = c.postgres_tab_name, ts_col: str = c.tab_col[11]) -> int:
         """
-
         Delete records older than ts. 
         Returns number of affected rows.
-
         Arguments:
-
         ts (optional) : Specifies time and date in psql format timestamp ('YYYY-MM-DD hh:mm:ss'), default = current_timestamp
         table (optional) : Name of a table to remove records from, default = config.postgres_tab_name
         ts_col (optional) : Name of a column which contains timestamp values, default = config.tab_col[11]
@@ -64,9 +79,7 @@ class DB_Handler:
         """
         Insert values into a table. If record exists, update odds columns instead.
         Returns number of affected rows.
-
         Arguments:
-
         vals : Values to insert/update into a table
         table (optional) : Name of a table to insert/update records, default = config.postgres_tab_name
         headers (optional) : Name of columns, default = all
