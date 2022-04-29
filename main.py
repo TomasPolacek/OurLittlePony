@@ -22,7 +22,7 @@ class Logger(object):
 
 if __name__ == "__main__":
     sys.stdout = Logger("log")
-    scrapers = [ScraperEtipos(), ScraperFortuna(), ScraperNike()]
+    scrapers = [ScraperEtipos(), ScraperFortuna(), ScraperNike(), ScraperDoxxbet()]
 
     ############################################################################################
     ####################################### Scrape #############################################
