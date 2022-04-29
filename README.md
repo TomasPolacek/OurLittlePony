@@ -1,32 +1,25 @@
 # OurLittlePony
-```
-      web_site       | sport_type | sport_league |     team1     |      team2       | odds_1 | odds_2 | odds_x | odds_1x | odds_2x | odds_12 |         ts
----------------------+------------+--------------+---------------+------------------+--------+--------+--------+---------+---------+---------+---------------------
- https://www.nike.sk | box        | medzinarodne | Golovkin G.   | Murata R.        |   1.18 |   4.16 |      0 |       0 |       0 |       0 | 2022-04-09 10:30:00
- https://www.nike.sk | box        | medzinarodne | Garcia R.     | Tagoe E.         |   1.06 |   6.74 |      0 |       0 |       0 |       0 | 2022-04-10 06:00:00
- https://www.nike.sk | box        | medzinarodne | Benn C.       | Van Heerden Ch.  |   1.07 |   6.28 |      0 |       0 |       0 |       0 | 2022-04-16 21:00:00
- https://www.nike.sk | box        | medzinarodne | McCarthy T.   | Billam-Smith Ch. |   2.75 |   1.38 |      0 |       0 |       0 |       0 | 2022-04-16 21:00:00
- https://www.nike.sk | box        | medzinarodne | Spence E.     | Ugas Y.          |    1.2 |   3.87 |      0 |       0 |       0 |       0 | 2022-04-17 05:00:00
- https://www.nike.sk | box        | medzinarodne | Stevenson S.  | Valdez O.        |   1.18 |   4.16 |      0 |       0 |       0 |       0 | 2022-05-01 05:00:00
- https://www.nike.sk | box        | medzinarodne | Taylor K.     | Serrano A.       |   1.85 |   1.82 |      0 |       0 |       0 |       0 | 2022-05-01 05:00:00
- https://www.nike.sk | box        | medzinarodne | Bivol Dmitriy | Alvarez S.       |   3.57 |   1.23 |      0 |       0 |       0 |       0 | 2022-05-08 05:00:00
- https://www.nike.sk | box        | medzinarodne | Benavidez D.  | Lemieux D.       |   1.06 |   6.92 |      0 |       0 |       0 |       0 | 2022-05-22 04:00:00
- https://www.nike.sk | box        | medzinarodne | Davis G.      | Romero R.        |   1.09 |   5.89 |      0 |       0 |       0 |       0 | 2022-05-28 04:00:00
-```
-```
-pip install selenium
-pip install pyodbc
-pip install webdriver-manager
-pip install bs4
-https://www.postgresql.org/ftp/odbc/versions/msi/
-```
+- **WIP, not intended for actual use, only as a learning experience!**
+- Scrapes odds from SVK bookmakers and finds possible arbitrage bets. 
+- Execution time ~30minutes
 
-```
-End Doxxbet script execution on success:  2022-04-10 19:55:00.657682
-Script execution:  0:13:28.690864
+![Capture](https://user-images.githubusercontent.com/22457563/165987707-6afaad97-4eb6-4915-8bee-b6e9e0b2f4d9.PNG)
 
-End Nike script execution on success:  2022-04-10 20:01:06.030333
-Script execution:  0:06:05.371138
+## Requirements:
+- [Python 3](https://www.python.org/downloads/)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker-compose](https://docs.docker.com/compose/install/)
+- [psqlodbc 13.02](https://www.postgresql.org/ftp/odbc/versions/)
 
 
+Create DB container (run from root directory)
 ```
+docker-compose -f postgres\docker-compose.yaml up -d
+```
+
+Install required python packages ([virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) is recommended).
+```
+pip install -r requirements.txt
+```
+Discord is used for result output.
+[Create webhook in discord text channel](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) and copy its url into /src/config.py
